@@ -17,7 +17,149 @@
 #include <assert.h>
 #include <fstream>
 #include <sstream>
+#include <exception>
+#include <fstream>
+#include <string>
+#include <map>
+#include <stdio.h>
+#include <termios.h>
+#include <unistd.h>
 using namespace std;
+
+void input_correctly_number(int& inputValue) 
+{
+    while (!(cin >> inputValue) || cin.peek() != '\n') 
+    {
+        cin.clear();
+        cin.ignore(cin.rdbuf()->in_avail());
+        cout << "Введено некорректное значение. Повторите попытку: ";
+    }
+}
+
+void Limitations(int min, int max, int& inputValue) 
+{
+    while (inputValue < min || inputValue > max) 
+    {
+        cout << "Числовое значение вышло за допустимые границу. Повторите попытку: ";
+        input_correctly_number(inputValue);
+    }
+}
+
+string GetDataFromFile(string filename)
+{
+    string text, tmp;
+    ifstream in(filename);
+
+    if (!in.is_open())
+    {
+        throw runtime_error("Ошибка при открытии файла!");
+    }
+
+    while (!in.eof())
+    {
+        getline(in, tmp);
+        text += tmp;
+
+        if (!in.eof())
+        {
+            text += "\n";
+        }
+    }
+
+    return text;
+}
+
+void AppendDataToFile(string filename, string text)
+{
+    ofstream out;
+    out.open(filename, ios_base::app); 
+
+    if (!out.is_open())
+    {
+        throw runtime_error("Ошибка при открытии файла!");
+    }
+
+    out << text;
+}
+
+int getch() {
+    struct termios oldt, newt;
+    int ch;
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    ch = getchar();
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    return ch;
+}
+
+void StartTraining()
+{
+    int menu = 0;
+    do
+    {
+        system("clear");
+        string filename, text;
+        int errorsCount = 0;
+        cout << "Введите путь к файлу, в котором содержится текст: ";
+        cin >> filename;
+        text = GetDataFromFile(filename);
+
+        cout << text << "\n\n\nМожете начинать печатать: ";
+
+        int keys_fd; //дескриптор
+        keys_fd = open(DEV_PATH, O_RDONLY);
+
+        if (keys_fd < 0)
+        {
+            perror(strerror(errno));
+            exit(-1);
+        }
+
+        //HANDLE hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+
+        //for (auto symbol : text)
+        //{
+            //if ((int)symbol == getch())
+            //{
+                //SetConsoleTextAttribute(hStdOut, FOREGROUND_GREEN);
+            //}
+            //else
+            //{
+                //SetConsoleTextAttribute(hStdOut, FOREGROUND_RED);
+              //  errorsCount++;
+            //}
+
+            //cout << symbol;
+        //}
+
+        //SetConsoleTextAttribute(hStdOut, 7);
+        
+
+        double correctPercent = (text.size() - double(errorsCount)) / double(text.size());
+
+        cout << "\n\nПроцент попадания: ";
+        //SetConsoleTextAttribute(hStdOut, correctPercent < 0.65 ? 12 : correctPercent < 0.85 ? 6 : 10);
+        cout << correctPercent * 100 << "%\n\n";
+        //SetConsoleTextAttribute(hStdOut, 7);
+        cout << "Количество ошибок: " << errorsCount;
+        AppendDataToFile("statistics.txt", "Процент попадания: " + to_string(correctPercent * 100) 
+            + " Количество ошибок: " + to_string(errorsCount) + "\n");
+        cout << "\n\nТренировка завершена!\n1 - Повторить тренировку\n0 - Вернуться в главное меню\nВведите ваш выбор: ";
+        input_correctly_number(menu);
+        Limitations(0, 1, menu);
+
+    } while (menu != 0);
+
+}
+
+void PrintStatistics()
+{
+    system("clear");
+    cout << "Статистика результатов: \n" << GetDataFromFile("statistics.txt");
+    sleep(6);
+}
 
 int check_path(int result)
 {
@@ -186,14 +328,163 @@ public:
     void start()
     {
         get_keys_vector();
-    };
+    }
+
+    void get_keys_vector2()
+    {
+        int keys_fd; //дескриптор
+        struct input_event t;
+        keys_fd = check(open(DEV_PATH, O_RDONLY));
+
+        vector<string> names;
+        bool flag_shift = false;
+        bool flag_caps = false;
+
+
+        if (keys_fd <= 0)
+        {
+            cout << "open/dev/input/event1 device error!" << endl;
+            return;
+        }
+        while (true)
+        {
+            setlocale(LC_ALL, "RUS");
+
+            int menu = 0;
+            do
+            {
+                system("clear");
+                cout << "1 - Начать тренировку\n2 - Показать статистику тренировок\n0 - Выйти\nВведите ваш выбор: ";
+                input_correctly_number(menu);
+                Limitations(0, 2, menu);
+
+                if (menu == 2)
+                {
+                    PrintStatistics();
+                }
+                else if (menu == 0) 
+                {
+                    return;
+                }
+                else 
+                {
+
+                    system("clear");
+                    string filename, text;
+                    //int errorsCount = 0;
+                    cout << "Введите путь к файлу, в котором содержится текст: ";
+                    cin >> filename;
+                    text = GetDataFromFile(filename);
+
+                    int index = 0;
+                    cout << text << "\n\n\nМожете начинать печатать: ";
+
+
+
+                    while (true)
+                    {
+                        read(keys_fd, &t, sizeof(t));
+                        //read(keys_fd, &t, sizeof(t));
+
+                        if (true)
+                        {
+
+
+                            if (t.type == EV_KEY)
+                            {
+                                if (t.value == 0 || t.value == 1)
+                                {
+                                    if (t.code == 42 && t.value == 1)
+                                        flag_shift = true;
+                                    if (t.code == 42 && t.value == 0)
+                                        flag_shift = false;
+                                    if (t.code == 58 && t.value == 1)
+                                    {
+                                        cout << "Changed!" << endl;
+                                        flag_caps = !flag_caps;
+                                    }
+
+                                    cout << keys[t.code + 1000] << endl;
+                                            if (keys[t.code + 1000][0] == text[index])
+                                            {
+                                                cout << "true9";
+                                            }
+
+                                    if (t.value == 1 && isLetter(t.code))
+                                    {
+                                        if (flag_shift == true && flag_caps == false)
+                                        {
+                                            //names.push_back(keys[t.code + 1000]);
+                                            cout << keys[t.code + 1000] << endl;
+                                            if (keys[t.code + 1000][0] == text[index])
+                                            {
+                                                cout << "true8";
+                                            }
+                                        }
+                                        else if (flag_caps == true && flag_shift == false)
+                                        {
+                                            //names.push_back(keys[t.code + 1000]);
+                                            cout << keys[t.code + 1000] << endl;
+                                            if (keys[t.code + 1000][0] == text[index])
+                                            {
+                                                cout << "true7";
+                                            }
+                                            
+                                        }
+                                        else
+                                        {
+                                            //names.push_back(keys[t.code]);
+                                            cout << keys[t.code] << endl;
+
+                                            if (keys[t.code][0] == text[index])
+                                            {
+                                                cout << "true6";
+                                            }
+                                            
+                                        }
+                                    }               
+                                    else if (t.value == 1 && !isLetter(t.code))
+                                    {
+                                        if (flag_shift == true)
+                                        {
+                                            //names.push_back(keys[t.code + 1000]);
+                                            cout << keys[t.code + 1000] << endl;
+
+                                            if (keys[t.code + 1000][0] == text[index])
+                                            {
+                                                cout << "true5";
+                                            }
+                                            
+                                        }
+                                        if (flag_shift == false)
+                                        {
+                                            //names.push_back(keys[t.code]);
+                                            cout << keys[t.code] << endl;
+
+                                            if (keys[t.code][0] == text[index])
+                                            {
+                                                cout << "true4";
+                                            }
+                                            
+                                        }
+                                    }
+                                }
+                            }
+                            //index++;
+                        }
+                        close(keys_fd);
+                    }
+                }
+    
+            } while (menu != 0);
+                
+        }
+    }     
+
 
     void get_keys_vector()
     {
-
-         //check(chmod("/dev/input/event2", S_IROTH));
-    
-    int keys_fd; //дескриптор
+         int keys_fd; //дескриптор
     struct input_event t;
     //struct input_event t_shift;
     keys_fd = check(open(DEV_PATH, O_RDONLY));
@@ -205,6 +496,9 @@ public:
     vector<string> names;
     bool flag_shift = false;
     bool flag_caps = false;
+    string text = "123456";
+    int index = 0;
+
     if (keys_fd <= 0)
     {
         cout << "open/dev/input/event1 device error!" << endl;
@@ -212,8 +506,10 @@ public:
     }
     while (true)
     {
+        read(keys_fd, &t, sizeof(t));
+        read(keys_fd, &t, sizeof(t));
 
-        if (read(keys_fd, &t, sizeof(t)) == sizeof(t))
+        if (true)
         {
             if (t.type == EV_KEY)
             {
@@ -234,17 +530,32 @@ public:
                         if (flag_shift == true && flag_caps == false)
                         {
                             names.push_back(keys[t.code + 1000]);
-                            cout << "key1 " << keys[t.code + 1000] << endl;
+                            cout << keys[t.code + 1000] << endl;
+
+                            if (keys[t.code + 1000][0] == text[index])
+                            {
+                                cout << "true9";
+                            }
                         }
                         else if (flag_caps == true && flag_shift == false)
                         {
                             names.push_back(keys[t.code + 1000]);
-                            cout << "key2 " << keys[t.code + 1000] << endl;
+                            cout << keys[t.code + 1000] << endl;
+
+                            if (keys[t.code + 1000][0] == text[index])
+                            {
+                                cout << "true8";
+                            }
                         }
                         else
                         {
                             names.push_back(keys[t.code]);
-                            cout << "key3 " << keys[t.code] << endl;
+                            cout << keys[t.code] << endl;
+
+                            if (keys[t.code][0] == text[index])
+                            {
+                                cout << "true7";
+                            }
                         }
                     }               
                     else if (t.value == 1 && !isLetter(t.code))
@@ -252,12 +563,22 @@ public:
                         if (flag_shift == true)
                         {
                             names.push_back(keys[t.code + 1000]);
-                            cout << "key4 " << keys[t.code + 1000] << endl;
+                            cout << keys[t.code + 1000];
+
+                            if (keys[t.code + 1000][0] == text[index])
+                            {
+                                cout << "true6";
+                            }
                         }
                         if (flag_shift == false)
                         {
                             names.push_back(keys[t.code]);
-                            cout << "key5 " << keys[t.code] << endl;
+                            cout << keys[t.code] ;
+
+                            if (keys[t.code][0] == text[index])
+                            {
+                                cout << "true5";
+                            }
                         }
                     }
                 }
@@ -269,24 +590,8 @@ public:
             // }
 
         }
-
-
-        
     }
-    close(keys_fd);
-
-    // auto d_save = check(open(path, O_CREAT | O_RDWR, S_IRWXU | S_IRWXG | S_IRWXO));
-
-    // for (int i = 0; i < names.size(); ++i)
-    // {
-    //     write(d_save, names[i], strlen(names[i]));
-    // }
-
-    // close(d_save);
-    return;
-
-    }                 
-       
+    }                               
 };
 
 
@@ -298,6 +603,5 @@ int main()
 Key_logger a;
 
 a.start();
-
 
 }
